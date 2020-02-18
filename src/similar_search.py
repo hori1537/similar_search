@@ -30,22 +30,20 @@ data_processed_path = data_path / 'processed'
 # refer https://qiita.com/wasnot/items/20c4f30a529ae3ed5f52
 
 def main():
+    print("データベースを選択してください")
+    print("サブディレクトリ内の画像もすべて検索対象となります")
+
     data_folder_path = tkinter.filedialog.askdirectory(initialdir = data_processed_path,
                         title = 'choose data folder')
 
+    print("データベースと比較したい画像を選択してください")
     test_img_path = tkinter.filedialog.askopenfilename(initialdir = data_processed_path,
                         title = 'choose test image', filetypes = [('image file', '*.jpeg;*jpg;*png')])
-
-
 
     base_model = VGG19(weights="imagenet")
     #base_model = InceptionV3(weights="imagenet")
     base_model.summary()
     model = Model(inputs=base_model.input, outputs=base_model.get_layer("fc2").output)
-
-
-    #data_folder_path = "./pet"
-    #test_img_path = "子猫014.jpg"
 
     test_img = image.load_img(test_img_path, target_size=(224, 224))
     x = image.img_to_array(test_img)
@@ -56,13 +54,10 @@ def main():
     png_list  = glob.glob(data_folder_path + "/**/*.png", recursive=True)
     jpeg_list = glob.glob(data_folder_path + "/**/*.jpeg", recursive=True)
     jpg_list  = glob.glob(data_folder_path + "/**/*.jpg", recursive=True)
-
-
     image_list = png_list + jpeg_list + jpg_list
 
     fc2_list = []
     for image_path in image_list:
-
         img = image.load_img(image_path, target_size=(224, 224))
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
@@ -70,7 +65,7 @@ def main():
         fc2_features = model.predict(x)
         fc2_list.append(fc2_features[0])
 
-    print(fc2_list)
+    #print(fc2_list)
 
     # Annoy同様にデータを入れてbuildする。Numpy配列で入れられる。
     index = nmslib.init(method='hnsw', space='cosinesimil')
@@ -85,21 +80,24 @@ def main():
     print(distances)
     print(result)
 
+    print("選択した画像は " , test_img_path " です")
+
+    print("選択した画像に似ている順に表示します")
     for i, id in enumerate(ids):
-        print(image_list[id], " : ", distances[i])
+        print(image_list[id], " : 距離： ", distances[i])
 
-    print('test data')
-    print(test_img_path)
+    print("選択した画像は " , test_img_path " です")
+
+    #index.save(model_name)
+    import time
+    time.sleep(3000)
 
 
-
-    index.save(model_name)
-
-    import sys
-    sys.exit()
-    # end of main()
+if __name__ == "__main__" :
+    main()
 
 # tkinter
+'''
 root = tkinter.Tk()
 
 font1 = font.Font(family='游ゴシック', size=10, weight='bold')
@@ -124,3 +122,4 @@ button_start  = ttk.Button(frame1, text='データフォルダ選択',
 for child in frame1.winfo_children():
     child.grid_configure(padx=5, pady=5)
 root.mainloop()
+'''
